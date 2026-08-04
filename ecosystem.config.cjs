@@ -3,12 +3,12 @@ module.exports = {
     {
       name: "trio-cafe-web",
       script: "npm",
-      args: "run preview",
+      args: "run preview -- --host 0.0.0.0",
       cwd: __dirname,
       env: {
         NODE_ENV: "production",
-        PORT: 4173
-      }
-    }
-  ]
+        PORT: 4173,
+      },
+    },
+  ],
 };
