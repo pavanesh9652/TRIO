@@ -4,7 +4,6 @@ import ReceiptModal from '../components/ReceiptModal';
 import { printReceipt } from '../utils/receipt';
 import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
-const TAX_PERCENT = 5;
 const money = (n) => `₹${Number(n || 0).toFixed(2)}`;
 
 export default function NewOrder() {
@@ -12,7 +11,7 @@ export default function NewOrder() {
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
-  const [tableNumber, setTableNumber] = useState('');
+  const [tableNumber, setTableNumber] = useState('A');
   const [notes, setNotes] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -81,7 +80,6 @@ export default function NewOrder() {
     );
 
   const subtotal = cart.reduce((sum, line) => sum + line.price * line.quantity, 0);
-  const tax = (subtotal * TAX_PERCENT) / 100;
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
 
   const placeOrder = async () => {
@@ -244,13 +242,9 @@ export default function NewOrder() {
             <span>Subtotal</span>
             <span>{money(subtotal)}</span>
           </div>
-          <div>
-            <span>Tax ({TAX_PERCENT}%)</span>
-            <span>{money(tax)}</span>
-          </div>
           <div className="grand">
             <span>Total</span>
-            <span>{money(subtotal + tax)}</span>
+            <span>{money(subtotal)}</span>
           </div>
         </div>
 
@@ -266,7 +260,7 @@ export default function NewOrder() {
           {tableNumber.trim() && <em> · Table {tableNumber.trim()}</em>}
         </span>
         <span className="cart-bar-total">
-          {money(subtotal + tax)} <strong>Review →</strong>
+          {money(subtotal)} <strong>Review →</strong>
         </span>
       </button>
 
