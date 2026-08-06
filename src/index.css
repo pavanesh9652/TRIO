@@ -11,7 +11,11 @@
   --radius: 12px;
   --shadow: 0 1px 3px rgba(44, 38, 34, 0.08);
 
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--ink);
 }
 
@@ -417,7 +421,9 @@ label.field textarea,
   border-radius: var(--radius);
   background: #fff;
   cursor: pointer;
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    border-color 0.1s ease;
 }
 
 .menu-card:hover {
@@ -816,7 +822,7 @@ label.field textarea,
 .receipt-preview img {
   display: block;
   width: 100%;
-  max-width: 300px;
+  max-width: none;
   margin: 0 auto;
   background: #fff;
   box-shadow: 0 1px 6px rgba(44, 38, 34, 0.16);
