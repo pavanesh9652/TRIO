@@ -44,7 +44,7 @@ function wrap(ctx, text, maxWidth) {
 function paint(ctx, order, height) {
   const nameWidth = WIDTH - PAD * 2 - 130; // reserve the right column for amounts
 
-  ctx.font = `24px ${FONT}`;
+  ctx.font = `34px ${FONT}`;
   const lines = order.items.map((item) => ({
     item,
     nameLines: wrap(ctx, `${item.quantity} x ${item.name}`, nameWidth),
@@ -63,7 +63,7 @@ function paint(ctx, order, height) {
   let y = 0;
 
   const divider = (dashed = true) => {
-    y += 18;
+    y += 24;
     ctx.save();
     ctx.strokeStyle = "#bdb4a8";
     ctx.lineWidth = 1;
@@ -73,7 +73,7 @@ function paint(ctx, order, height) {
     ctx.lineTo(WIDTH - PAD, y);
     ctx.stroke();
     ctx.restore();
-    y += 24;
+    y += 32;
   };
 
   const centered = (text, font, color = "#1d1a17") => {
@@ -95,70 +95,65 @@ function paint(ctx, order, height) {
   };
 
   // ---- header ----
-  y = 52;
-  centered("TRIO CAFE", `bold 42px ${FONT}`);
+  y = 80;
+  centered("TRIO CAFE", `bold 84px ${FONT}`);
+  y += 50;
+  centered("Order Receipt", `26px ${FONT}`, "#7d746a");
   y += 36;
-  centered("Order Receipt", `22px ${FONT}`, "#7d746a");
-  y += 30;
-  centered("Thanks for dining with us", `18px ${FONT}`, "#7d746a");
+  centered("Thanks for dining with us", `22px ${FONT}`, "#7d746a");
 
   divider();
 
   // ---- meta ----
-  row("Order No.", order.orderNumber, `22px ${FONT}`, `bold 22px ${FONT}`);
-  y += 34;
-  row("Date", stamp(order.createdAt), `20px ${FONT}`, `bold 20px ${FONT}`);
-  y += 34;
-  row("Table", String(order.tableNumber), `20px ${FONT}`, `bold 20px ${FONT}`);
+  row("Order No.", order.orderNumber, `26px ${FONT}`, `bold 26px ${FONT}`);
+  y += 40;
+  row("Date", stamp(order.createdAt), `24px ${FONT}`, `bold 24px ${FONT}`);
+  y += 40;
+  row("Table", String(order.tableNumber), `24px ${FONT}`, `bold 24px ${FONT}`);
 
   divider();
 
   // ---- items ----
-  ctx.font = `bold 18px ${FONT}`;
+  ctx.font = `bold 22px ${FONT}`;
   ctx.fillStyle = "#7d746a";
   ctx.fillText("ITEM", PAD, y);
   ctx.textAlign = "right";
   ctx.fillText("AMOUNT", WIDTH - PAD, y);
   ctx.textAlign = "left";
   ctx.fillStyle = "#1d1a17";
-  y += 18;
+  y += 22;
 
   divider();
 
   lines.forEach(({ item, nameLines, noteLines }) => {
     nameLines.forEach((text, index) => {
-      ctx.font = `28px ${FONT}`;
+      ctx.font = `34px ${FONT}`;
       ctx.fillText(text, PAD, y);
       if (index === 0) {
-        ctx.font = `28px ${FONT}`;
+        ctx.font = `34px ${FONT}`;
         ctx.textAlign = "right";
         ctx.fillText(money(item.price * item.quantity), WIDTH - PAD, y);
         ctx.textAlign = "left";
       }
-      y += 40;
+      y += 48;
     });
 
     noteLines.forEach((text) => {
-      ctx.font = `italic 20px ${FONT}`;
+      ctx.font = `italic 24px ${FONT}`;
       ctx.fillStyle = "#7d746a";
       ctx.fillText(text, PAD + 14, y);
       ctx.fillStyle = "#1d1a17";
-      y += 28;
+      y += 32;
     });
 
-    y += 12;
+    y += 14;
   });
 
   divider();
 
   // ---- totals ----
-  row("Subtotal", money(order.subtotal), `28px ${FONT}`);
-  y += 44;
-
-  divider(false);
-
-  row("TOTAL", money(order.total), `bold 44px ${FONT}`);
-  y += 32;
+  row("TOTAL", money(order.total), `bold 53px ${FONT}`);
+  y += 38;
 
   if (orderNoteLines.length) {
     divider();
@@ -173,10 +168,10 @@ function paint(ctx, order, height) {
 
   divider();
 
-  y += 10;
-  centered("Visit again!", `bold 24px ${FONT}`);
-  y += 28;
-  centered("This is a computer generated receipt", `18px ${FONT}`, "#7d746a");
+  y += 14;
+  centered("Visit again!", `bold 29px ${FONT}`);
+  y += 34;
+  centered("This is a computer generated receipt", `22px ${FONT}`, "#7d746a");
 
   return y;
 }
@@ -242,7 +237,6 @@ export function buildReceiptText(order) {
   });
 
   lines.push("");
-  lines.push(`Subtotal: ${money(order.subtotal)}`);
   lines.push(`TOTAL: ${money(order.total)}`);
 
   if (order.notes) {
