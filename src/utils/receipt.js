@@ -110,74 +110,55 @@ function paint(ctx, order, height) {
   row("Date", stamp(order.createdAt), `20px ${FONT}`, `bold 20px ${FONT}`);
   y += 34;
   row("Table", String(order.tableNumber), `20px ${FONT}`, `bold 20px ${FONT}`);
-  y += 34;
-  row(
-    "Served by",
-    order.waiterName || "-",
-    `20px ${FONT}`,
-    `bold 20px ${FONT}`,
-  );
-  y += 34;
-  row(
-    "Status",
-    String(order.status || "placed").toUpperCase(),
-    `20px ${FONT}`,
-    `bold 20px ${FONT}`,
-  );
 
   divider();
 
   // ---- items ----
-  ctx.font = `bold 16px ${FONT}`;
+  ctx.font = `bold 18px ${FONT}`;
   ctx.fillStyle = "#7d746a";
   ctx.fillText("ITEM", PAD, y);
   ctx.textAlign = "right";
   ctx.fillText("AMOUNT", WIDTH - PAD, y);
   ctx.textAlign = "left";
   ctx.fillStyle = "#1d1a17";
-  y += 16;
+  y += 18;
 
   divider();
 
   lines.forEach(({ item, nameLines, noteLines }) => {
     nameLines.forEach((text, index) => {
-      ctx.font = `24px ${FONT}`;
+      ctx.font = `28px ${FONT}`;
       ctx.fillText(text, PAD, y);
       if (index === 0) {
-        ctx.font = `24px ${FONT}`;
+        ctx.font = `28px ${FONT}`;
         ctx.textAlign = "right";
         ctx.fillText(money(item.price * item.quantity), WIDTH - PAD, y);
         ctx.textAlign = "left";
       }
-      y += 34;
+      y += 40;
     });
 
     noteLines.forEach((text) => {
-      ctx.font = `italic 18px ${FONT}`;
+      ctx.font = `italic 20px ${FONT}`;
       ctx.fillStyle = "#7d746a";
       ctx.fillText(text, PAD + 14, y);
       ctx.fillStyle = "#1d1a17";
-      y += 26;
+      y += 28;
     });
 
-    y += 10;
+    y += 12;
   });
 
   divider();
 
   // ---- totals ----
-  const taxPercent = order.subtotal
-    ? Math.round((order.tax / order.subtotal) * 100)
-    : 0;
-  row("Subtotal", money(order.subtotal), `22px ${FONT}`);
-  y += 36;
-  row(`Tax (${taxPercent}%)`, money(order.tax), `22px ${FONT}`);
-  y += 20;
+  row("Subtotal", money(order.subtotal), `28px ${FONT}`);
+  y += 44;
 
   divider(false);
 
-  row("TOTAL", money(order.total), `bold 32px ${FONT}`);
-  y += 24;
+  row("TOTAL", money(order.total), `bold 44px ${FONT}`);
+  y += 32;
 
   if (orderNoteLines.length) {
     divider();
@@ -247,8 +228,6 @@ export function buildReceiptText(order) {
     `Order No.: ${order.orderNumber}`,
     `Date: ${stamp(order.createdAt)}`,
     `Table: ${order.tableNumber}`,
-    `Served by: ${order.waiterName || "-"}`,
-    `Status: ${String(order.status || "placed").toUpperCase()}`,
     "",
     "ITEM                                  AMOUNT",
     "-------------------------------------------",
@@ -264,7 +243,6 @@ export function buildReceiptText(order) {
 
   lines.push("");
   lines.push(`Subtotal: ${money(order.subtotal)}`);
-  lines.push(`Tax: ${money(order.tax)}`);
   lines.push(`TOTAL: ${money(order.total)}`);
 
   if (order.notes) {
