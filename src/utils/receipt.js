@@ -229,7 +229,6 @@ export function downloadReceipt(order) {
 }
 
 const ANDROID_PRINT_APP = {
-  packageName: "com.simple.bluetooth.printer",
   action: "android.intent.action.SEND",
   mimeType: "text/plain",
 };
@@ -284,9 +283,8 @@ export function launchAndroidPrinterApp(order) {
   if (!isAndroidBrowser()) return false;
 
   const text = buildReceiptText(order);
-  const intentUrl = `intent://print#Intent;action=${ANDROID_PRINT_APP.action};type=${ANDROID_PRINT_APP.mimeType};S.android.intent.extra.TEXT=${encodeURIComponent(
-    text,
-  )};package=${ANDROID_PRINT_APP.packageName};end`;
+  const encodedText = encodeURIComponent(text);
+  const intentUrl = `intent:#Intent;action=${ANDROID_PRINT_APP.action};category=android.intent.category.DEFAULT;type=${ANDROID_PRINT_APP.mimeType};S.android.intent.extra.TEXT=${encodedText};end`;
 
   window.location.href = intentUrl;
   return true;
@@ -297,10 +295,6 @@ export function launchAndroidPrinterApp(order) {
  * blocking that window.open() runs into.
  */
 export function printReceipt(order) {
-  if (launchAndroidPrinterApp(order)) {
-    return;
-  }
-
   const dataUrl = receiptDataUrl(order);
   const frame = document.createElement("iframe");
   frame.setAttribute("aria-hidden", "true");
