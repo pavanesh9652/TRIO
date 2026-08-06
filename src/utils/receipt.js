@@ -98,9 +98,9 @@ function paint(ctx, order, height) {
   y = 80;
   centered("TRIO CAFE", `bold 84px ${FONT}`);
   y += 50;
-  centered("Order Receipt", `26px ${FONT}`, "#7d746a");
+  centered("Order Receipt", `26px ${FONT}`, "#1d1a17");
   y += 36;
-  centered("Thanks for dining with us", `22px ${FONT}`, "#7d746a");
+  centered("Thanks for dining with us", `22px ${FONT}`, "#1d1a17");
 
   divider();
 
@@ -115,7 +115,7 @@ function paint(ctx, order, height) {
 
   // ---- items ----
   ctx.font = `bold 22px ${FONT}`;
-  ctx.fillStyle = "#7d746a";
+  ctx.fillStyle = "#1d1a17";
   ctx.fillText("ITEM", PAD, y);
   ctx.textAlign = "right";
   ctx.fillText("AMOUNT", WIDTH - PAD, y);
