@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import NewOrder from './pages/NewOrder';
 import Orders from './pages/Orders';
+import Reports from './pages/Reports';
 import AdminMenu from './pages/AdminMenu';
 import OrderLogs from './pages/OrderLogs';
 
@@ -24,6 +25,7 @@ export default function App() {
           >
             <Route path="/orders/new" element={<NewOrder />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/reports" element={<Reports />} />
             <Route
               path="/admin/menu"
               element={

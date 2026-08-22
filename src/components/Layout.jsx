@@ -40,6 +40,7 @@ export default function Layout() {
           <nav className="nav">
             <NavLink to="/orders/new">New Order</NavLink>
             <NavLink to="/orders">Orders</NavLink>
+            <NavLink to="/reports">Reports</NavLink>
             {isAdmin && <NavLink to="/admin/menu">Menu</NavLink>}
             {isAdmin && <NavLink to="/admin/logs">Order Logs</NavLink>}
           </nav>

@@ -181,6 +181,13 @@ h2 {
   font-size: 18px;
 }
 
+.muted-copy {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 .head-actions {
   display: flex;
   gap: 6px;
@@ -784,6 +791,207 @@ label.field textarea,
 .footnote {
   font-size: 12px;
   margin-bottom: 0;
+}
+
+/* ---------- reports ---------- */
+.report-grid {
+  margin-bottom: 18px;
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.report-panel {
+  padding: 14px;
+}
+
+.compact {
+  margin-bottom: 12px;
+}
+
+.report-list {
+  display: grid;
+  gap: 10px;
+}
+
+.report-row {
+  display: grid;
+  gap: 6px;
+}
+
+.report-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.report-row small {
+  color: var(--muted);
+}
+
+.report-bar-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #f2eee8;
+  overflow: hidden;
+}
+
+.report-bar {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.report-bar-placed {
+  background: #1a56c4;
+}
+
+.report-bar-preparing {
+  background: #a86a00;
+}
+
+.report-bar-served {
+  background: var(--success);
+}
+
+.report-bar-paid {
+  background: #5b3fa8;
+}
+
+.report-bar-cancelled {
+  background: var(--danger);
+}
+
+.report-bar-accent {
+  background: var(--accent);
+}
+
+.report-bar-waiter {
+  background: linear-gradient(90deg, var(--accent), #d8995f);
+}
+
+.comparison-panel {
+  margin: 24px 0;
+}
+
+.comparison-select {
+  max-width: 180px;
+}
+
+.line-chart-wrap {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff, #faf7f3);
+  padding: 12px 8px 6px;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  height: 220px;
+}
+
+.chart-axis {
+  stroke: rgba(44, 38, 34, 0.35);
+  stroke-width: 1;
+}
+
+.chart-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.chart-point {
+  fill: var(--accent-dark);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.chart-value {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--accent-dark);
+}
+
+.chart-label {
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+.report-table-panel {
+  margin-top: 18px;
+}
+
+.report-summary-table th,
+.report-summary-table td {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.status-cell small {
+  color: var(--muted);
+}
+
+.cancel-status small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stat-count-button,
+.count-button {
+  appearance: none;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.stat-count-button {
+  min-width: 56px;
+  padding: 6px 12px;
+  font-size: 1rem;
+}
+
+.count-button {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.stat-count-button:hover,
+.count-button:hover {
+  opacity: 0.9;
+}
+
+.span-two {
+  grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+  .report-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .span-two {
+    grid-column: auto;
+  }
 }
 
 /* ---------- receipt modal ---------- */
