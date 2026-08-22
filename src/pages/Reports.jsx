@@ -38,6 +38,7 @@ const weekKey = (date) => {
 };
 const formatShortMonth = (date) => date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
 const formatShortWeek = (date) => date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const formatShortDay = (date) => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 const dayKey = (iso) => {
     const date = new Date(iso);
     return toDateInputValue(date);
@@ -56,7 +57,8 @@ export default function Reports() {
     const [staff, setStaff] = useState([]);
     const [menuItems, setMenuItems] = useState([]);
     const [selectedBreakdown, setSelectedBreakdown] = useState(null);
-    const [comparisonMode, setComparisonMode] = useState('week');
+    const [chartTooltip, setChartTooltip] = useState(null);
+    const [comparisonMode, setComparisonMode] = useState('day');
     const [filters, setFilters] = useState(() => ({
         ...getCurrentMonthRange(),
         status: '',
@@ -167,7 +169,14 @@ export default function Reports() {
             }
         };
 
-        if (comparisonMode === 'month') {
+        if (comparisonMode === 'day') {
+            const cursor = new Date(rangeStart);
+            while (cursor <= rangeEnd) {
+                const label = formatShortDay(cursor);
+                addBucket(toDateInputValue(cursor), label, new Date(cursor));
+                cursor.setDate(cursor.getDate() + 1);
+            }
+        } else if (comparisonMode === 'month') {
             const cursor = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
             const endCursor = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
             while (cursor <= endCursor) {
@@ -187,13 +196,22 @@ export default function Reports() {
 
         dateBreakdown.forEach((day) => {
             const entryDate = parseLocalDate(day.dateKey) || new Date();
-            const key = comparisonMode === 'month' ? monthKey(entryDate) : weekKey(entryDate);
+            const key = comparisonMode === 'day'
+                ? toDateInputValue(entryDate)
+                : comparisonMode === 'month'
+                    ? monthKey(entryDate)
+                    : weekKey(entryDate);
             const existing = bucketMap.get(key);
             if (existing) {
                 existing.revenue += Number(day.totalRevenue || 0);
                 existing.orders += Number(day.totalOrders || 0);
             } else {
-                addBucket(key, comparisonMode === 'month' ? formatShortMonth(entryDate) : `${formatShortWeek(entryDate)} - ${formatShortWeek(new Date(entryDate.getTime() + 6 * 86400000))}`, entryDate);
+                const label = comparisonMode === 'day'
+                    ? formatShortDay(entryDate)
+                    : comparisonMode === 'month'
+                        ? formatShortMonth(entryDate)
+                        : `${formatShortWeek(entryDate)} - ${formatShortWeek(new Date(entryDate.getTime() + 6 * 86400000))}`;
+                addBucket(key, label, entryDate);
                 const created = bucketMap.get(key);
                 created.revenue = Number(day.totalRevenue || 0);
                 created.orders = Number(day.totalOrders || 0);
@@ -202,6 +220,16 @@ export default function Reports() {
 
         return [...bucketMap.values()].sort((a, b) => new Date(a.dateValue) - new Date(b.dateValue));
     }, [comparisonMode, dateBreakdown, filters.from, filters.to]);
+
+    const formatK = (n) => {
+        const v = Number(n || 0);
+        if (v >= 1000) {
+            const k = v / 1000;
+            const fixed = k >= 10 ? Math.round(k) : Math.round(k * 10) / 10;
+            return `₹${fixed}k`;
+        }
+        return money(v);
+    };
 
     const selectedRows = selectedBreakdown?.rows || [];
 
@@ -383,9 +411,9 @@ export default function Reports() {
                     <section className="panel comparison-panel">
                         <div className="panel-head compact">
                             <div>
-                                <h3>{comparisonMode === 'month' ? 'Month-wise comparison' : 'Week-wise comparison'}</h3>
+                                <h3>{comparisonMode === 'day' ? 'Date-wise comparison' : comparisonMode === 'month' ? 'Month-wise comparison' : 'Week-wise comparison'}</h3>
                                 <small className="muted-copy">
-                                    {comparisonSeries.length} {comparisonMode === 'month' ? `month${comparisonSeries.length === 1 ? '' : 's'}` : `week${comparisonSeries.length === 1 ? '' : 's'} `} in selected range
+                                    {comparisonSeries.length} {comparisonMode === 'day' ? `day${comparisonSeries.length === 1 ? '' : 's'}` : comparisonMode === 'month' ? `month${comparisonSeries.length === 1 ? '' : 's'}` : `week${comparisonSeries.length === 1 ? '' : 's'}`} in selected range
                                 </small>
                             </div>
                             <select
@@ -393,42 +421,119 @@ export default function Reports() {
                                 onChange={(event) => setComparisonMode(event.target.value)}
                                 className="comparison-select"
                             >
-                                <option value="month">Month wise</option>
+                                <option value="day">Date wise</option>
                                 <option value="week">Week wise</option>
+                                <option value="month">Month wise</option>
                             </select>
                         </div>
 
                         {comparisonSeries.length > 0 && (
-                            <div className="line-chart-wrap">
-                                <svg viewBox="0 0 700 220" className="line-chart" preserveAspectRatio="none">
-                                    <line x1="30" x2="670" y1="180" y2="180" className="chart-axis" />
-                                    <line x1="30" x2="30" y1="20" y2="180" className="chart-axis" />
-                                    {comparisonSeries.map((point, index) => {
+                            <div className="line-chart-wrap" onClick={() => setChartTooltip(null)} style={{ position: 'relative' }}>
+                                <svg viewBox="0 0 760 240" className="line-chart" preserveAspectRatio="none">
+                                    {(() => {
+                                        const chartLeft = 40;
+                                        const chartRight = 720;
+                                        const chartTop = 20;
+                                        const chartBottom = 190; // leave extra room for rotated labels
+                                        const chartWidth = chartRight - chartLeft;
+                                        const chartHeight = chartBottom - chartTop;
+
                                         const maxValue = Math.max(...comparisonSeries.map((item) => item.revenue || 0), 1);
-                                        const x = 40 + (index * (620 / Math.max(comparisonSeries.length - 1, 1)));
-                                        const y = 170 - (((point.revenue || 0) / maxValue) * 130);
+                                        const points = comparisonSeries.map((point, index) => {
+                                            const x = chartLeft + (index * (chartWidth / Math.max(comparisonSeries.length - 1, 1)));
+                                            const y = chartBottom - (((point.revenue || 0) / maxValue) * (chartHeight - 20));
+                                            return { point, x, y, index };
+                                        });
+
+                                        const xLabelStep = Math.max(1, Math.ceil(comparisonSeries.length / 12));
+                                        const valueLabelStep = Math.max(1, Math.ceil(comparisonSeries.length / 8));
+
                                         return (
-                                            <g key={point.key}>
-                                                {index > 0 && (
-                                                    <line
-                                                        x1={40 + ((index - 1) * (620 / Math.max(comparisonSeries.length - 1, 1)))}
-                                                        y1={170 - (((comparisonSeries[index - 1].revenue || 0) / maxValue) * 130)}
-                                                        x2={x}
-                                                        y2={y}
-                                                        className="chart-line"
-                                                    />
-                                                )}
-                                                <circle cx={x} cy={y} r="5" className="chart-point" />
-                                                <text x={x} y={y - 12} textAnchor="middle" className="chart-value">
-                                                    {money(point.revenue)}
-                                                </text>
-                                                <text x={x} y="200" textAnchor="middle" className="chart-label">
-                                                    {point.label}
-                                                </text>
+                                            <g>
+                                                <line x1={chartLeft - 10} x2={chartRight - 20} y1={chartBottom} y2={chartBottom} className="chart-axis" />
+                                                <line x1={chartLeft - 10} x2={chartLeft - 10} y1={chartTop} y2={chartBottom} className="chart-axis" />
+                                                {points.map(({ point, x, y, index }) => {
+                                                    const showXLabel = index % xLabelStep === 0 || index === comparisonSeries.length - 1 || index === 0;
+                                                    // show all non-zero values to avoid confusion (previous logic hid many labels)
+                                                    const showValueLabel = (point.revenue || 0) > 0;
+
+                                                    return (
+                                                        <g key={point.key}>
+                                                            {index > 0 && (
+                                                                <line
+                                                                    x1={points[index - 1].x}
+                                                                    y1={points[index - 1].y}
+                                                                    x2={x}
+                                                                    y2={y}
+                                                                    className="chart-line"
+                                                                />
+                                                            )}
+
+                                                            <g className="chart-point-wrap">
+                                                                <circle cx={x} cy={y} r="5" className="chart-point" />
+                                                                <title>{`${point.label} — ${money(point.revenue)}`}</title>
+                                                            </g>
+
+                                                            {showValueLabel && (
+                                                                <text x={x} y={y - 12} textAnchor="middle" className="chart-value small">
+                                                                    {formatK(point.revenue)}
+                                                                </text>
+                                                            )}
+
+                                                            {showXLabel && (() => {
+                                                                const displayLabel = comparisonMode === 'week' ? String(point.label).split(' - ')[0] : point.label;
+                                                                const labelY = chartBottom + 28;
+                                                                return (
+                                                                    <text
+                                                                        x={x}
+                                                                        y={labelY}
+                                                                        textAnchor="end"
+                                                                        className="chart-label small rotated"
+                                                                        transform={`rotate(-45 ${x} ${labelY})`}
+                                                                    >
+                                                                        {displayLabel}
+                                                                    </text>
+                                                                );
+                                                            })()}
+
+                                                            {/* clickable area: open rich tooltip */}
+                                                            <rect
+                                                                x={x - 10}
+                                                                y={y - 10}
+                                                                width={20}
+                                                                height={20}
+                                                                fill="transparent"
+                                                                style={{ cursor: 'pointer' }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const svg = e.currentTarget.ownerSVGElement || e.currentTarget.ownerDocument.querySelector('.line-chart');
+                                                                    const rect = svg.getBoundingClientRect();
+                                                                    setChartTooltip({
+                                                                        left: e.clientX - rect.left,
+                                                                        top: e.clientY - rect.top,
+                                                                        data: point,
+                                                                    });
+                                                                }}
+                                                            />
+                                                        </g>
+                                                    );
+                                                })}
                                             </g>
                                         );
-                                    })}
+                                    })()}
                                 </svg>
+
+                                {chartTooltip && (
+                                    <div
+                                        className="chart-tooltip"
+                                        style={{ left: chartTooltip.left, top: chartTooltip.top, transform: 'translate(-50%, -110%)' }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <h4>{chartTooltip.data.label}</h4>
+                                        <div><strong>{money(chartTooltip.data.revenue)}</strong></div>
+                                        <div className="muted">Orders: {chartTooltip.data.orders || 0}</div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </section>

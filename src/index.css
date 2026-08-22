@@ -891,12 +891,14 @@ label.field textarea,
   border-radius: 12px;
   background: linear-gradient(180deg, #fff, #faf7f3);
   padding: 12px 8px 6px;
+  overflow: visible;
 }
 
 .line-chart {
   display: block;
   width: 100%;
-  height: 220px;
+  height: 240px;
+  overflow: visible;
 }
 
 .chart-axis {
@@ -925,6 +927,53 @@ label.field textarea,
 .chart-label {
   font-size: 10px;
   fill: var(--muted);
+}
+
+/* Smaller variants used for dense charts */
+.chart-value.small {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chart-label.small {
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+.chart-label.rotated {
+  text-anchor: end;
+}
+
+.chart-point-wrap circle {
+  transition:
+    transform 0.12s ease,
+    r 0.12s ease;
+}
+.chart-point-wrap circle:hover {
+  transform: translateY(-2px);
+  r: 6;
+}
+
+/* chart tooltip */
+.chart-tooltip {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(44, 38, 34, 0.12);
+  font-size: 13px;
+  pointer-events: auto;
+  min-width: 140px;
+  z-index: 5;
+}
+.chart-tooltip h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.chart-tooltip .muted {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .report-table-panel {
