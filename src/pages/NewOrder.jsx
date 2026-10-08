@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api, { errorMessage } from '../api/client';
 import ReceiptModal from '../components/ReceiptModal';
 import { printReceipt } from '../utils/receipt';
@@ -6,13 +7,39 @@ import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 const money = (n) => `₹${Number(n || 0).toFixed(2)}`;
 
+function linesFromOrder(items = []) {
+  const lines = [];
+  for (const item of items) {
+    const menuItem = String(item.menuItem?._id || item.menuItem);
+    const existing = lines.find((line) => line.menuItem === menuItem);
+    if (existing) {
+      existing.quantity += Number(item.quantity) || 0;
+      if (!existing.notes && item.notes) existing.notes = item.notes;
+      continue;
+    }
+    lines.push({
+      menuItem,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      notes: item.notes || '',
+    });
+  }
+  return lines;
+}
+
 export default function NewOrder() {
+  const { id: orderId } = useParams();
+  const editing = Boolean(orderId);
+  const navigate = useNavigate();
   const [menu, setMenu] = useState([]);
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
-  const [tableNumber, setTableNumber] = useState('A');
+  const [tableNumber, setTableNumber] = useState(editing ? '' : 'A');
   const [notes, setNotes] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [ready, setReady] = useState(!editing);
   const [feedback, setFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
   // On phones the cart is a bottom sheet instead of a sidebar.
@@ -34,6 +61,42 @@ export default function NewOrder() {
       .then(({ data }) => setMenu(data))
       .catch((err) => setFeedback({ type: 'error', text: errorMessage(err) }));
   }, []);
+
+  useEffect(() => {
+    if (!orderId) return undefined;
+    let cancelled = false;
+
+    api
+      .get(`/orders/${orderId}`)
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data.status !== 'placed') {
+          navigate('/orders', {
+            replace: true,
+            state: {
+              notice: `${data.orderNumber} is "${data.status}" and can no longer be edited.`,
+            },
+          });
+          return;
+        }
+        setOrderNumber(data.orderNumber);
+        setTableNumber(data.tableNumber || '');
+        setNotes(data.notes || '');
+        setCart(linesFromOrder(data.items));
+        setReady(true);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        navigate('/orders', {
+          replace: true,
+          state: { notice: errorMessage(err, 'Could not load this order') },
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, navigate]);
 
   const categories = useMemo(
     () => ['All', ...Array.from(new Set(menu.map((m) => m.category))).sort()],
@@ -92,33 +155,61 @@ export default function NewOrder() {
       return setFeedback({ type: 'error', text: 'Add at least one item' });
     }
 
+    const payload = {
+      tableNumber: tableNumber.trim(),
+      notes,
+      items: cart.map(({ menuItem, quantity, notes: lineNotes }) => ({
+        menuItem,
+        quantity,
+        notes: lineNotes,
+      })),
+    };
+
     setBusy(true);
     try {
-      const { data } = await api.post('/orders', {
-        tableNumber: tableNumber.trim(),
-        notes,
-        items: cart.map(({ menuItem, quantity, notes: lineNotes }) => ({
-          menuItem,
-          quantity,
-          notes: lineNotes,
-        })),
-      });
-      setFeedback({
-        type: 'success',
-        text: `${data.orderNumber} placed for table ${data.tableNumber} — ${money(data.total)}`,
-      });
+      const { data } = editing
+        ? await api.patch(`/orders/${orderId}/items`, payload)
+        : await api.post('/orders', payload);
+
       setPlacedOrder(data);
       setShowReceipt(true);
       setCartOpen(false);
-      setCart([]);
-      setTableNumber('');
-      setNotes('');
+
+      if (editing) {
+        setFeedback({
+          type: 'success',
+          text: `${data.orderNumber} updated for table ${data.tableNumber} — ${money(data.total)}`,
+        });
+        setOrderNumber(data.orderNumber);
+        setTableNumber(data.tableNumber || '');
+        setNotes(data.notes || '');
+        setCart(linesFromOrder(data.items));
+      } else {
+        setFeedback({
+          type: 'success',
+          text: `${data.orderNumber} placed for table ${data.tableNumber} — ${money(data.total)}`,
+        });
+        setCart([]);
+        setTableNumber('');
+        setNotes('');
+      }
     } catch (err) {
-      setFeedback({ type: 'error', text: errorMessage(err, 'Could not place the order') });
+      setFeedback({
+        type: 'error',
+        text: errorMessage(err, editing ? 'Could not save the order' : 'Could not place the order'),
+      });
     } finally {
       setBusy(false);
     }
   };
+
+  if (editing && !ready) {
+    return (
+      <div className="panel">
+        <p className="empty">Loading order…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="order-layout">
@@ -162,7 +253,7 @@ export default function NewOrder() {
 
       <aside className={`panel cart ${cartOpen ? 'cart-open' : ''}`}>
         <div className="panel-head">
-          <h2>Current Order</h2>
+          <h2>{editing ? `Edit ${orderNumber}` : 'Current Order'}</h2>
           <div className="head-actions">
             {cart.length > 0 && (
               <button className="btn btn-ghost btn-sm" onClick={() => setCart([])}>
@@ -249,7 +340,7 @@ export default function NewOrder() {
         </div>
 
         <button className="btn btn-primary btn-block" onClick={placeOrder} disabled={busy}>
-          {busy ? 'Placing…' : 'Place Order'}
+          {busy ? (editing ? 'Saving…' : 'Placing…') : editing ? 'Save changes' : 'Place Order'}
         </button>
       </aside>
 

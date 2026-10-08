@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api, { errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReceiptModal from '../components/ReceiptModal';
@@ -19,6 +20,9 @@ const when = (iso) => new Date(iso).toLocaleString();
 
 export default function Orders() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const notice = location.state?.notice || '';
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('');
   const [mine, setMine] = useState(false);
@@ -110,6 +114,7 @@ export default function Orders() {
         </div>
       </div>
 
+      {notice && <div className="alert alert-error">{notice}</div>}
       {error && <div className="alert alert-error">{error}</div>}
       {loading && <p className="empty">Loading orders…</p>}
       {!loading && orders.length === 0 && <p className="empty">No orders yet.</p>}
@@ -147,6 +152,14 @@ export default function Orders() {
             </div>
 
             <div className="order-actions">
+              {order.status === 'placed' && (
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => navigate(`/orders/${order._id}/edit`)}
+                >
+                  Edit
+                </button>
+              )}
               {NEXT_ACTIONS[order.status].map((next) => (
                 <button
                   key={next}

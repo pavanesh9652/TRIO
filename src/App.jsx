@@ -24,6 +24,7 @@ export default function App() {
             }
           >
             <Route path="/orders/new" element={<NewOrder />} />
+            <Route path="/orders/:id/edit" element={<NewOrder />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/reports" element={<Reports />} />
             <Route
